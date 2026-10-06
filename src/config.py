@@ -75,6 +75,8 @@ parser.add_argument('--no_multiprocessing',
 
 
 # Network
+parser.add_argument('--dcn_backend', default='torchvision',
+                    choices=('torchvision', 'legacy_dcn'), help='DCN operator backend')
 parser.add_argument('--model',
                     type=str,
                     default='CompletionFormer',

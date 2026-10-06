@@ -65,7 +65,10 @@ class Backbone(nn.Module):
         else:
             raise TypeError(mode)
 
-        self.former = PVT(in_chans=64, patch_size=2, pretrained='./pretrained/pvt.pth',)
+        from_scratch = getattr(args, 'from_scratch', False)
+        self.former = PVT(in_chans=64, patch_size=2,
+                          pretrained=None if from_scratch else './pretrained/pvt.pth',
+                          resnet_pretrained=not from_scratch)
 
         channels = [64, 128, 64, 128, 320, 512]
         # Shared Decoder

@@ -30,6 +30,8 @@
 
 ## ⚙️ Setup
 
+本机现代环境的 NYU 随机权重测速入口见 [BENCHMARK.md](BENCHMARK.md)：独立 Conda 环境 `CompletionFormer`，torchvision DCN，无需 Apex 或预训练权重。下方保留原作者的训练环境说明。
+
 Assuming a fresh [Anaconda](https://www.anaconda.com/download/) distribution, you can install the dependencies with:
 ```shell
 conda create -n completionformer python=3.8

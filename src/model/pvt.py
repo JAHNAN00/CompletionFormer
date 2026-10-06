@@ -5,8 +5,6 @@ from functools import partial
 import torchvision
 
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from mmseg.utils import get_root_logger
-from mmcv.runner import load_checkpoint
 from .resnet_cbam import BasicBlock
 
 
@@ -173,12 +171,13 @@ class PyramidVisionTransformer(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dims=[64, 128, 256, 512],
                  num_heads=[1, 2, 4, 8], mlp_ratios=[4, 4, 4, 4], qkv_bias=False, qk_scale=None, drop_rate=0.,
                  attn_drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm, depths=[3, 4, 6, 3],
-                 sr_ratios=[8, 4, 2, 1], num_stages=4, pretrained=None):
+                  sr_ratios=[8, 4, 2, 1], num_stages=4, pretrained=None,
+                  resnet_pretrained=True):
         super().__init__()
         self.depths = depths
         self.num_stages = num_stages
 
-        net = get_resnet34(pretrained=True)
+        net = get_resnet34(pretrained=resnet_pretrained)
         setattr(self, "embed_layer1", net.layer1)
         setattr(self, "embed_layer2", net.layer2)
         del net
@@ -216,6 +215,8 @@ class PyramidVisionTransformer(nn.Module):
 
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
+            from mmseg.utils import get_root_logger
+            from mmcv.runner import load_checkpoint
             logger = get_root_logger()
             load_checkpoint(self, pretrained, map_location='cpu', strict=False, logger=logger)
             print("===pretrained weight loaded===")
@@ -289,6 +290,8 @@ class PVT(PyramidVisionTransformer):
         super(PVT, self).__init__(
             patch_size=patch_size, in_chans=in_chans, embed_dims=[64, 128, 320, 512], num_heads=[1, 2, 5, 8], mlp_ratios=[8, 8, 4, 4],
             qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 4, 6, 3],
-            sr_ratios=[8, 4, 2, 1], drop_rate=0.0, drop_path_rate=0.1, pretrained=kwargs['pretrained'])
+            sr_ratios=[8, 4, 2, 1], drop_rate=0.0, drop_path_rate=0.1,
+            pretrained=kwargs['pretrained'],
+            resnet_pretrained=kwargs.get('resnet_pretrained', True))
 
 
