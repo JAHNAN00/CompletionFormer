@@ -67,7 +67,8 @@ class Backbone(nn.Module):
 
         from_scratch = getattr(args, 'from_scratch', False)
         self.former = PVT(in_chans=64, patch_size=2,
-                          pretrained=None if from_scratch else './pretrained/pvt.pth',
+                          pretrained=None if from_scratch else getattr(args, 'pvt_pretrained', './pretrained/pvt.pth'),
+                          depths=getattr(args, 'pvt_depths', [3, 4, 6, 3]),
                           resnet_pretrained=not from_scratch)
 
         channels = [64, 128, 64, 128, 320, 512]

@@ -215,11 +215,15 @@ class PyramidVisionTransformer(nn.Module):
 
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
-            from mmseg.utils import get_root_logger
-            from mmcv.runner import load_checkpoint
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, map_location='cpu', strict=False, logger=logger)
-            print("===pretrained weight loaded===")
+            checkpoint = torch.load(pretrained, map_location='cpu', weights_only=False)
+            state = checkpoint.get('state_dict', checkpoint.get('model', checkpoint))
+            own = self.state_dict()
+            compatible = {k: v for k, v in state.items()
+                          if k in own and own[k].shape == v.shape}
+            self.load_state_dict(compatible, strict=False)
+            self.pretrain_info = {'path': pretrained, 'loaded': len(compatible),
+                                 'skipped': [k for k in state if k not in compatible]}
+            print('PVT pretrained:', self.pretrain_info, flush=True)
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -289,7 +293,7 @@ class PVT(PyramidVisionTransformer):
     def __init__(self, in_chans, patch_size=4, **kwargs):
         super(PVT, self).__init__(
             patch_size=patch_size, in_chans=in_chans, embed_dims=[64, 128, 320, 512], num_heads=[1, 2, 5, 8], mlp_ratios=[8, 8, 4, 4],
-            qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 4, 6, 3],
+            qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=kwargs.get('depths', [3, 4, 6, 3]),
             sr_ratios=[8, 4, 2, 1], drop_rate=0.0, drop_path_rate=0.1,
             pretrained=kwargs['pretrained'],
             resnet_pretrained=kwargs.get('resnet_pretrained', True))
